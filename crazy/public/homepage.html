@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Homepage</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        h1 { color: #007bff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #007bff; color: white; }
+        button { padding: 5px 10px; background: #dc3545; color: white; border: none; cursor: pointer; }
+        .filter { margin: 20px 0; }
+        .filter input { padding: 8px; width: 200px; }
+        .filter button { background: #28a745; padding: 8px 15px; }
+    </style>
+</head>
+<body>
+    <h1>Welcome, <span id="userName"></span></h1>
+    <button onclick="logout()">Logout</button>
+
+    <div class="filter">
+        <input type="text" id="searchInput" placeholder="Search by name or category...">
+        <input type="number" id="minPrice" placeholder="Min Price">
+        <input type="number" id="maxPrice" placeholder="Max Price">
+        <button onclick="filterProducts()">Search</button>
+        <button onclick="loadAllProducts()">Clear</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody id="productTable">
+            <tr><td colspan="6">Loading...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/';
+        } else {
+            document.getElementById('userName').innerText = user.name;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        async function loadAllProducts() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('minPrice').value = '';
+            document.getElementById('maxPrice').value = '';
+            const res = await fetch('/products');
+            const products = await res.json();
+            displayProducts(products);
+        }
+
+        async function filterProducts() {
+            const search = document.getElementById('searchInput').value.trim();
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            
+            let url = '/products?';
+            if (search) url += `q=${search}&`;
+            if (minPrice) url += `minPrice=${minPrice}&`;
+            if (maxPrice) url += `maxPrice=${maxPrice}&`;
+            
+            const res = await fetch(url);
+            const products = await res.json();
+            displayProducts(products);
+        }
+
+        function displayProducts(products) {
+            if (products.length === 0) {
+                document.getElementById('productTable').innerHTML = 
+                    '<tr><td colspan="6">No products found</td></tr>';
+                return;
+            }
+
+            const html = products.map(p => `
+                <tr>
+                    <td>${p._id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.description}</td>
+                    <td>${p.category}</td>
+                    <td>₹${p.price}</td>
+                    <td>${p.stock}</td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('productTable').innerHTML = html;
+        }
+
+        loadAllProducts();
+    </script>
+</body>
+</html>

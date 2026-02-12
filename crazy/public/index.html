@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Auth</title>
+    <style>
+        .hidden { display: none; }
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }
+        input { width: 100%; padding: 8px; margin: 5px 0; }
+        button { width: 100%; padding: 10px; margin: 10px 0; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .toggle-link { color: #007bff; cursor: pointer; text-decoration: underline; }
+        #result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <div id="registerSection">
+        <h2>Register</h2>
+        <form id="registerForm">
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Register</button>
+        </form>
+        <p>Already have an account? <span class="toggle-link" onclick="showLogin()">Login here</span></p>
+    </div>
+
+    <div id="loginSection" class="hidden">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <span class="toggle-link" onclick="showRegister()">Register here</span></p>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        function showLogin() {
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('result').innerText = '';
+        }
+
+        function showRegister() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.remove('hidden');
+            document.getElementById('result').innerText = '';
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const res = await fetch('/user/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+            
+            if (res.ok) {
+                e.target.reset();
+                setTimeout(() => showLogin(), 1500);
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const res = await fetch('/user/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            if (res.ok) {
+                // Store user info in localStorage
+                localStorage.setItem('user', JSON.stringify(result.user));
+                // Redirect to homepage
+                window.location.href = '/homepage.html';
+            } else {
+                document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+            }
+        });
+    </script>
+</body>
+</html>
