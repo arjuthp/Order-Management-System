@@ -1,3 +1,4 @@
+require('dotenv').config();
 
 const express = require('express');
 
@@ -15,9 +16,9 @@ app.use(express.urlencoded({extended:false}));//parse form data
 
 //routes
 
-
+app.use("/auth", require('./auth/auth.routes'));
 app.use("/user", require('./user/user.routes'));
 app.use("/products", require('./product/product.routes'));
-// app.use("/orders", require('./order/order.routes'));
+app.use("/orders", require('./order/order.routes'));
 
 app.listen(PORT, () => console.log(`Server Started:\n http://localhost:${PORT}`));

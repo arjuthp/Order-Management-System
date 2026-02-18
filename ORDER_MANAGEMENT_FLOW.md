@@ -1,10 +1,10 @@
-# Order Management System - MVC Flow
+# Order Management System - MVC Flow (Simplified)
 
 ## System Architecture
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════
-                    ORDER MANAGEMENT SYSTEM - MVC FLOW (SIMPLIFIED)
+                    ORDER MANAGEMENT SYSTEM - SIMPLE FLOW
 ═══════════════════════════════════════════════════════════════════════════════
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -17,7 +17,6 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  /api/users/*         → User Management Routes                              │
 │  /api/products/*      → Product Routes                                      │
-│  /api/cart/*          → Cart Routes                                         │
 │  /api/orders/*        → Order Routes                                        │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
@@ -27,26 +26,16 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐         │
-│  │ UserController   │  │ ProductController│  │ CartController   │         │
+│  │ UserController   │  │ ProductController│  │ OrderController  │         │
 │  ├──────────────────┤  ├──────────────────┤  ├──────────────────┤         │
-│  │ • createUser()   │  │ • getAllProducts()│ │ • addToCart()    │         │
-│  │ • getUser()      │  │ • getProductById()│ │ • getCart()      │         │
-│  │ • updateUser()   │  │ • searchProducts()│ │ • updateCart()   │         │
-│  │ • deleteUser()   │  │ • filterProducts()│ │ • removeFromCart()│        │
-│  └──────────────────┘  │ • createProduct() │ │ • clearCart()    │         │
+│  │ • createUser()   │  │ • getAllProducts()│ │ • createOrder()  │         │
+│  │ • getUser()      │  │ • getProductById()│ │ • getOrders()    │         │
+│  │ • updateUser()   │  │ • searchProducts()│ │ • getOrderById() │         │
+│  │ • deleteUser()   │  │ • filterProducts()│ │ • updateStatus() │         │
+│  └──────────────────┘  │ • createProduct() │ │ • cancelOrder()  │         │
 │                        │ • updateProduct() │ └──────────────────┘         │
 │                        │ • deleteProduct() │                               │
 │                        └──────────────────┘                                │
-│                                                                              │
-│  ┌──────────────────┐                                                       │
-│  │ OrderController  │                                                       │
-│  ├──────────────────┤                                                       │
-│  │ • createOrder()  │                                                       │
-│  │ • getOrders()    │                                                       │
-│  │ • getOrderById() │                                                       │
-│  │ • updateStatus() │                                                       │
-│  │ • cancelOrder()  │                                                       │
-│  └──────────────────┘                                                       │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
@@ -56,35 +45,16 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐         │
-│  │ User Model       │  │ Product Model    │  │ Cart Model       │         │
+│  │ User Model       │  │ Product Model    │  │ Order Model      │         │
 │  ├──────────────────┤  ├──────────────────┤  ├──────────────────┤         │
 │  │ • name           │  │ • name           │  │ • userId         │         │
-│  │ • email          │  │ • description    │  │ • items[]        │         │
-│  │ • password       │  │ • price          │  │   - productId    │         │
-│  │ • phone          │  │ • category       │  │   - quantity     │         │
-│  │ • address        │  │ • stock          │  │   - price        │         │
-│  │ • createdAt      │  │ • imageUrl       │  │ • totalAmount    │         │
-│  └──────────────────┘  │ • createdAt      │  │ • createdAt      │         │
-│                        └──────────────────┘  │ • updatedAt      │         │
-│                                               └──────────────────┘         │
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────┐          │
-│  │ Order Model                                                   │          │
-│  ├──────────────────────────────────────────────────────────────┤          │
-│  │ • userId (ref: User)                                          │          │
-│  │ • orderItems[]                                                │          │
-│  │   - productId (ref: Product)                                  │          │
-│  │   - name                                                      │          │
-│  │   - quantity                                                  │          │
-│  │   - price                                                     │          │
-│  │ • shippingAddress                                             │          │
-│  │   - street, city, state, zipCode, country                     │          │
-│  │ • paymentMethod (COD, Card, UPI, etc.)                        │          │
-│  │ • totalAmount                                                 │          │
-│  │ • orderStatus (pending, confirmed, shipped, delivered,        │          │
-│  │                cancelled)                                     │          │
-│  │ • createdAt, updatedAt                                        │          │
-│  └──────────────────────────────────────────────────────────────┘          │
+│  │ • email          │  │ • description    │  │ • productId      │         │
+│  │ • password       │  │ • price          │  │ • quantity       │         │
+│  │ • phone          │  │ • category       │  │ • totalAmount    │         │
+│  │ • address        │  │ • stock          │  │ • status         │         │
+│  │ • createdAt      │  │ • imageUrl       │  │ • createdAt      │         │
+│  └──────────────────┘  │ • createdAt      │  └──────────────────┘         │
+│                        └──────────────────┘                                │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
@@ -92,7 +62,7 @@
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          DATABASE (MongoDB)                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  Collections: users, products, carts, orders                                │
+│  Collections: users, products, orders                                       │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -101,27 +71,24 @@
 ### 1. USER MANAGEMENT
 - `POST /api/users` → Create user account
 - `GET /api/users/:id` → Get user details
-- `PUT /api/users/:id` → Update user profile/address
+- `PUT /api/users/:id` → Update user profile
+- `DELETE /api/users/:id` → Delete user
 
 ### 2. BROWSE PRODUCTS
 - `GET /api/products` → Get all products
 - `GET /api/products/:id` → Get single product
 - `GET /api/products/search?q=laptop` → Search by name
 - `GET /api/products?category=electronics&minPrice=100&maxPrice=1000` → Filter products
+- `POST /api/products` → Create new product
+- `PUT /api/products/:id` → Update product
+- `DELETE /api/products/:id` → Delete product
 
-### 3. CART MANAGEMENT
-- `POST /api/cart/add` → Add product to cart
-- `GET /api/cart/:userId` → View cart
-- `PUT /api/cart/update` → Update quantity
-- `DELETE /api/cart/remove/:productId` → Remove item
-- `DELETE /api/cart/clear/:userId` → Clear cart
-
-### 4. CHECKOUT & ORDER
-- `POST /api/orders` → Create order from cart
-- `GET /api/orders/:userId` → View user's order history
-- `GET /api/orders/detail/:orderId` → View specific order
+### 3. PLACE ORDER (Direct)
+- `POST /api/orders` → User selects product and places order directly
+- `GET /api/orders/user/:userId` → View user's order history
+- `GET /api/orders/:orderId` → View specific order details
 - `PUT /api/orders/:orderId/status` → Update order status
-- `PUT /api/orders/:orderId/cancel` → Cancel order
+- `DELETE /api/orders/:orderId` → Cancel/delete order
 
 ## Folder Structure
 
@@ -130,44 +97,39 @@ order-management-system/
 │
 ├── index.js                    # Main entry point
 ├── package.json
-├── .env                        # Environment variables (DB connection)
 │
-├── config/
-│   └── db.js                   # MongoDB connection
+├── user/
+│   ├── user.model.js
+│   ├── user.controller.js
+│   └── user.routes.js
 │
-├── models/
-│   ├── User.js
-│   ├── Product.js
-│   ├── Cart.js
-│   └── Order.js
+├── product/
+│   ├── product.model.js
+│   ├── product.controller.js
+│   └── product.routes.js
 │
-├── controllers/
-│   ├── userController.js
-│   ├── productController.js
-│   ├── cartController.js
-│   └── orderController.js
-│
-├── routes/
-│   ├── userRoutes.js
-│   ├── productRoutes.js
-│   ├── cartRoutes.js
-│   └── orderRoutes.js
-│
-└── middleware/
-    └── errorMiddleware.js      # Error handling
+└── order/
+    ├── order.model.js
+    ├── order.controller.js
+    └── order.routes.js
 ```
 
 ## Key Features
 
-- **User Management**: Create, read, update user profiles
-- **Product Catalog**: Browse, search, and filter products
-- **Shopping Cart**: Add, update, remove items with quantity management
-- **Order Processing**: Create orders, track status, view history
-- **Inventory Tracking**: Monitor product stock levels
-- **Order Status Management**: Track orders through different states (pending, confirmed, shipped, delivered, cancelled)
+- **User Management**: Create, read, update, delete user profiles
+- **Product Catalog**: Browse, search, filter, create, update, delete products
+- **Direct Ordering**: User selects product and places order immediately (no cart)
+- **Order Management**: View orders, update status, cancel orders
 
 ## Technology Stack
 
 - **Backend**: Node.js with Express.js
 - **Database**: MongoDB with Mongoose ODM
 - **Architecture**: MVC (Model-View-Controller) pattern
+
+## Simple Flow Summary
+
+1. User browses products
+2. User selects a product with quantity
+3. Order is created directly
+4. Order status can be tracked and updated

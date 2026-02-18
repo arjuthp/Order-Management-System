@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px; 
+            background: #fafafa; 
+            line-height: 1.6;
+        }
+        .header { 
+            padding: 20px 25px; 
+            margin-bottom: 20px; 
+            border: 1px solid #e0e0e0; 
+            background: #fff;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .header h2 { 
+            font-size: 24px; 
+            font-weight: 600; 
+            letter-spacing: -0.5px;
+        }
+        .section { 
+            padding: 25px; 
+            margin-bottom: 20px; 
+            border: 1px solid #e0e0e0; 
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .section h3 { 
+            font-size: 18px; 
+            font-weight: 600; 
+            margin-bottom: 15px; 
+            padding-bottom: 10px; 
+            border-bottom: 2px solid #000;
+            letter-spacing: -0.3px;
+        }
+        input, textarea { 
+            padding: 10px 12px; 
+            margin: 5px 0; 
+            border: 1.5px solid #ddd; 
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+        input:focus, textarea:focus { 
+            outline: none; 
+            border-color: #000; 
+        }
+        button { 
+            padding: 10px 18px; 
+            background: #000; 
+            color: #fff; 
+            border: none; 
+            cursor: pointer; 
+            margin: 5px 5px 5px 0; 
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        button:hover { 
+            background: #333; 
+            transform: translateY(-1px);
+        }
+        .item { 
+            padding: 15px 0; 
+            border-bottom: 1px solid #f0f0f0; 
+        }
+        .item:last-child { 
+            border-bottom: none; 
+        }
+        .item b { 
+            font-size: 16px; 
+            font-weight: 600;
+        }
+        form { 
+            padding: 20px; 
+            margin-top: 15px; 
+            border: 1px solid #e0e0e0; 
+            background: #fafafa;
+        }
+        form h4 { 
+            margin-bottom: 15px; 
+            font-size: 16px; 
+            font-weight: 600;
+        }
+        small { 
+            color: #888; 
+            font-size: 13px;
+        }
+        a { 
+            color: #000; 
+            text-decoration: none; 
+            border-bottom: 1px solid #000;
+            padding-bottom: 1px;
+        }
+        a:hover {
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Admin Panel</h2>
+        <a href="/" style="color: #000;">Logout</a>
+    </div>
+    
+    <!-- USERS -->
+    <div class="section">
+        <h3>Users</h3>
+        <input type="text" id="userSearch" placeholder="Search by name, email, or ID...">
+        <button onclick="searchUsers()">Search</button>
+        <button id="userToggle" onclick="loadUsers()">Show All</button>
+        <div id="userList"></div>
+    </div>
+    
+    <!-- PRODUCTS -->
+    <div class="section">
+        <h3>Products</h3>
+    <input type="text" id="productSearch" placeholder="Search products...">
+    <input type="number" id="minPrice" placeholder="Min Price" style="width: 120px;">
+    <input type="number" id="maxPrice" placeholder="Max Price" style="width: 120px;">
+    <button onclick="searchProducts()">Search</button>
+    <button id="productToggle" onclick="loadProducts()">Show All</button>
+        <button onclick="showAddProduct()">Add Product</button>
+        <div id="productList"></div>
+        
+        <div id="addProductForm" style="display:none;">
+            <h4>Add Product</h4>
+            <form id="productForm">
+                <input type="text" name="name" placeholder="Name" required style="width: 100%;">
+                <input type="text" name="description" placeholder="Description" required style="width: 100%;">
+                <input type="text" name="category" placeholder="Category" required style="width: 100%;">
+                <input type="number" name="price" placeholder="Price" required style="width: 100%;">
+                <input type="number" name="stock" placeholder="Stock" required style="width: 100%;">
+                <button type="submit">Save</button>
+                <button type="button" onclick="hideAddProduct()">Cancel</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ORDERS -->
+    <div class="section">
+        <h3>Orders</h3>
+        <input type="text" id="orderSearch" placeholder="Search by order ID or user ID...">
+        <button onclick="searchOrders()">Search</button>
+        <button id="orderToggle" onclick="loadOrders()">Show All</button>
+        <div id="orderList"></div>
+    </div>
+
+    <script>
+        let usersVisible = false;
+        let productsVisible = false;
+        let ordersVisible = false;
+
+        async function loadUsers() {
+            if (usersVisible) {
+                document.getElementById('userList').innerHTML = '';
+                document.getElementById('userToggle').innerText = 'Show All';
+                usersVisible = false;
+                return;
+            }
+            
+            const res = await fetch('/user/list');
+            const users = await res.json();
+            displayUsers(users);
+            document.getElementById('userToggle').innerText = 'Hide';
+            usersVisible = true;
+        }
+
+        async function searchUsers() {
+            const query = document.getElementById('userSearch').value.toLowerCase();
+            if (!query) {
+                loadUsers();
+                return;
+            }
+            
+            const res = await fetch('/user/list');
+            const allUsers = await res.json();
+            
+            // Filter by name, email, or ID
+            const filtered = allUsers.filter(u => 
+                u.name.toLowerCase().includes(query) ||
+                u.email.toLowerCase().includes(query) ||
+                u._id.includes(query)
+            );
+            
+            displayUsers(filtered);
+        }
+
+        function displayUsers(users) {
+            if (users.length === 0) {
+                document.getElementById('userList').innerHTML = '<p>No users found</p>';
+                return;
+            }
+            
+            const html = users.map(u => `
+                <div class="item">
+                    <b>${u.name}</b> - ${u.email}<br>
+                    <small>ID: ${u._id}</small><br>
+                    <button class="delete-btn" onclick="deleteUser('${u._id}')">Delete</button>
+                </div>
+            `).join('');
+            document.getElementById('userList').innerHTML = html;
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Delete user?')) return;
+            await fetch(`/user/${id}`, { method: 'DELETE' });
+            loadUsers();
+        }
+
+        async function loadProducts() {
+            if (productsVisible) {
+                document.getElementById('productList').innerHTML = '';
+                document.getElementById('productToggle').innerText = 'Show All';
+                productsVisible = false;
+                return;
+            }
+            
+            const res = await fetch('/products');
+            const products = await res.json();
+            displayProducts(products);
+            document.getElementById('productToggle').innerText = 'Hide';
+            productsVisible = true;
+        }
+
+        async function searchProducts() {
+            const query = document.getElementById('productSearch').value;
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            
+            let url = '/products?';
+            if (query) url += `q=${query}&`;
+            if (minPrice) url += `minPrice=${minPrice}&`;
+            if (maxPrice) url += `maxPrice=${maxPrice}&`;
+            
+            const res = await fetch(url);
+            const products = await res.json();
+            displayProducts(products);
+        }
+
+        function displayProducts(products) {
+            const html = products.map(p => `
+                <div class="item">
+                    <b>${p.name}</b> - ₹${p.price}<br>
+                    ${p.description}<br>
+                    <small>Category: ${p.category} | Stock: ${p.stock}</small><br>
+                    <small>ID: ${p._id}</small><br>
+                    <button class="delete-btn" onclick="deleteProduct('${p._id}')">Delete</button>
+                </div>
+            `).join('');
+            document.getElementById('productList').innerHTML = html;
+        }
+
+        function showAddProduct() {
+            document.getElementById('addProductForm').style.display = 'block';
+        }
+
+        function hideAddProduct() {
+            document.getElementById('addProductForm').style.display = 'none';
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            data.price = Number(data.price);
+            data.stock = Number(data.stock);
+            
+            await fetch('/products', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            e.target.reset();
+            hideAddProduct();
+            loadProducts();
+        });
+
+        async function deleteProduct(id) {
+            if (!confirm('Delete product?')) return;
+            await fetch(`/products/${id}`, { method: 'DELETE' });
+            loadProducts();
+        }
+
+        async function loadOrders() {
+            if (ordersVisible) {
+                document.getElementById('orderList').innerHTML = '';
+                document.getElementById('orderToggle').innerText = 'Show All';
+                ordersVisible = false;
+                return;
+            }
+            
+            const res = await fetch('/orders');
+            const orders = await res.json();
+            displayOrders(orders);
+            document.getElementById('orderToggle').innerText = 'Hide';
+            ordersVisible = true;
+        }
+
+        async function searchOrders() {
+            const query = document.getElementById('orderSearch').value.toLowerCase();
+            if (!query) {
+                loadOrders();
+                return;
+            }
+            
+            const res = await fetch('/orders');
+            const allOrders = await res.json();
+            
+            // Filter by order ID or user ID
+            const filtered = allOrders.filter(o => 
+                o._id.includes(query) ||
+                (o.userId?._id && o.userId._id.includes(query))
+            );
+            
+            displayOrders(filtered);
+        }
+
+        function displayOrders(orders) {
+            if (orders.length === 0) {
+                document.getElementById('orderList').innerHTML = '<p>No orders found</p>';
+                return;
+            }
+            
+            const html = orders.map(o => `
+                <div class="item">
+                    <b>Order #${o._id}</b><br>
+                    User: ${o.userId?.name} (ID: ${o.userId?._id})<br>
+                    Product: ${o.productId?.name}<br>
+                    Quantity: ${o.quantity} | Total: ₹${o.totalAmount}<br>
+                    Status: <b>${o.status}</b><br>
+                    <button onclick="updateStatus('${o._id}')">Update Status</button>
+                    <button class="delete-btn" onclick="deleteOrder('${o._id}')">Delete</button>
+                </div>
+            `).join('');
+            document.getElementById('orderList').innerHTML = html;
+        }
+
+        async function updateStatus(id) {
+            const status = prompt('Enter status (pending/confirmed/shipped/delivered/cancelled):');
+            if (!status) return;
+            
+            await fetch(`/orders/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status })
+            });
+            loadOrders();
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm('Delete order?')) return;
+            await fetch(`/orders/${id}`, { method: 'DELETE' });
+            loadOrders();
+        }
+    </script>
+</body>
+</html>
